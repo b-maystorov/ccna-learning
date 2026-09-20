@@ -166,8 +166,8 @@ Or clone it using the HTTPS option provided by GitHub.
 | Section | Topic | Status |
 |---|---|---|
 | 01 | Network Fundamentals | ✅ Completed |
-| 02 | IPv4 & Subnetting | ⏳ In Progress |
-| 03 | Cisco IOS Basics | Not started |
+| 02 | IPv4 & Subnetting | ✅ Completed |
+| 03 | Cisco IOS Basics | ✅ Completed |
 | 04 | VLANs & Trunks | Not started |
 | 05 | STP & EtherChannel | Not started |
 | 06 | Routing | Not started |
