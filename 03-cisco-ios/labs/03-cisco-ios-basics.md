@@ -1,42 +1,43 @@
 # Lab 03 – Cisco IOS Basics & SSH Remote Access
 
-## Ziel des Labs
+## Lab Goal
 
-In diesem Lab wird ein Cisco-Router grundlegend konfiguriert und anschließend per SSH von einem PC aus administriert.
+In this lab, a Cisco router is configured from scratch and then managed remotely from a PC using SSH.
 
-Dabei werden wichtige Cisco-IOS-Grundlagen praktisch angewendet:
+The lab covers:
 
-- IOS-Konfigurationsmodi
-- Hostname setzen
-- Router-Interface konfigurieren
-- Console-Zugang absichern
-- Privileged EXEC Mode mit `enable secret` schützen
-- Passwörter in der Konfiguration verschleiern
-- MOTD-Banner konfigurieren
-- lokalen Benutzer erstellen
-- SSH Version 2 aktivieren
-- RSA-Schlüssel erzeugen
-- VTY-Leitungen konfigurieren
-- SSH-Verbindung von einem Client testen
-- Running-Config dauerhaft als Startup-Config speichern
+- Cisco IOS configuration modes
+- Hostname configuration
+- Interface configuration
+- Console password protection
+- `enable secret`
+- Password encryption
+- MOTD banner
+- Local user accounts
+- RSA key generation
+- SSH version 2
+- VTY line configuration
+- Remote SSH login
+- Configuration verification
+- Saving the running configuration
 
 ---
 
-# 1. Topologie
+# 1. Topology
 
-Verwendete Geräte:
+Devices used:
 
 - 1x Cisco 1941 Router
 - 1x Cisco 2960-24TT Switch
 - 1x PC
 
-Topologie:
+Topology:
 
 ```text
 PC0 -------- Switch0 -------- R1
 ```
 
-Verbindungen:
+Connections:
 
 ```text
 PC0 FastEthernet0
@@ -50,18 +51,18 @@ Switch0 FastEthernet0/2
 R1 GigabitEthernet0/0
 ```
 
-Für beide Verbindungen wird ein **Copper Straight-Through Kabel** verwendet.
+Both connections use Copper Straight-Through cables.
 
 ---
 
-# 2. IP-Adressierung
+# 2. IP Addressing
 
-| Gerät | Interface | IP-Adresse | Subnetzmaske | Gateway |
-|---|---|---:|---:|---:|
+| Device | Interface | IP Address | Subnet Mask | Default Gateway |
+|---|---|---|---|---|
 | PC0 | FastEthernet0 | 192.168.1.10 | 255.255.255.0 | 192.168.1.1 |
 | R1 | GigabitEthernet0/0 | 192.168.1.1 | 255.255.255.0 | - |
 
-Beide Geräte befinden sich damit im Netzwerk:
+Network:
 
 ```text
 192.168.1.0/24
@@ -69,120 +70,111 @@ Beide Geräte befinden sich damit im Netzwerk:
 
 ---
 
-# 3. Router starten
+# 3. Initial Router Setup
 
-Beim ersten Start des Routers kann Cisco IOS fragen:
+When the router starts, Cisco IOS may ask:
 
 ```text
 Would you like to enter the initial configuration dialog? [yes/no]:
 ```
 
-Hier wird eingegeben:
+Enter:
 
 ```text
 no
 ```
 
-Danach kann die Konfiguration manuell über die CLI durchgeführt werden.
+The router can then be configured manually through the CLI.
 
 ---
 
-# 4. Privileged EXEC Mode öffnen
+# 4. Enter Privileged EXEC Mode
 
-Nach dem Start befindet man sich normalerweise im User EXEC Mode:
+The router initially starts in User EXEC mode:
 
 ```text
 Router>
 ```
 
-Mit:
+Enter:
 
 ```text
 enable
 ```
 
-wechselt man in den Privileged EXEC Mode:
+The prompt changes to:
 
 ```text
 Router#
 ```
 
-Von hier aus können administrative Befehle ausgeführt und der Konfigurationsmodus geöffnet werden.
+This is Privileged EXEC mode.
 
 ---
 
-# 5. Global Configuration Mode
+# 5. Enter Global Configuration Mode
 
 ```text
 configure terminal
 ```
 
-Danach erscheint:
+Prompt:
 
 ```text
 Router(config)#
 ```
 
-Der Global Configuration Mode wird verwendet, um die aktive Router-Konfiguration zu verändern.
+Global configuration mode is used to change the active device configuration.
 
 ---
 
-# 6. Hostname konfigurieren
-
-Der Router erhält den Namen `R1`.
+# 6. Configure the Hostname
 
 ```text
 hostname R1
 ```
 
-Der Prompt ändert sich danach von:
+The prompt changes from:
 
 ```text
 Router(config)#
 ```
 
-zu:
+to:
 
 ```text
 R1(config)#
 ```
 
-Der Hostname erleichtert besonders bei mehreren Routern und Switches die Identifikation eines Gerätes.
+A hostname makes network devices easier to identify.
 
 ---
 
-# 7. Router-Interface konfigurieren
+# 7. Configure the Router Interface
 
-Das Interface zum Switch ist:
-
-```text
-GigabitEthernet0/0
-```
-
-Konfiguration:
+Enter the interface:
 
 ```text
 interface gigabitEthernet 0/0
+```
+
+Configure the interface:
+
+```text
 ip address 192.168.1.1 255.255.255.0
 description LAN-to-Switch0
 no shutdown
 ```
 
-Mit:
+`no shutdown` enables the interface.
 
-```text
-no shutdown
-```
-
-wird das Interface aktiviert.
-
-Ohne diesen Befehl befindet sich ein Router-Interface normalerweise im Zustand:
+Without it, router interfaces are usually:
 
 ```text
 administratively down
 ```
 
-Danach den Konfigurationsmodus verlassen:
+Return to Privileged EXEC mode:
 
 ```text
 end
@@ -190,40 +182,35 @@ end
 
 ---
 
-# 8. Interface überprüfen
+# 8. Verify the Interface
 
-Mit:
+Use:
 
 ```text
 show ip interface brief
 ```
 
-kann der Status schnell kontrolliert werden.
-
-Erwartetes Ergebnis:
+Expected result:
 
 ```text
 Interface              IP-Address      Status      Protocol
 GigabitEthernet0/0     192.168.1.1    up          up
 ```
 
-`up/up` bedeutet:
-
-- physikalische Verbindung funktioniert
-- Line Protocol funktioniert ebenfalls
+`up/up` means both the physical connection and the line protocol are working.
 
 ---
 
-# 9. PC0 konfigurieren
+# 9. Configure PC0
 
-Auf PC0:
+On PC0:
 
 ```text
 Desktop
 → IP Configuration
 ```
 
-Folgende Werte werden eingetragen:
+Configure:
 
 ```text
 IP Address:      192.168.1.10
@@ -231,26 +218,24 @@ Subnet Mask:     255.255.255.0
 Default Gateway: 192.168.1.1
 ```
 
-Der Default Gateway ist das Router-Interface im gleichen lokalen Netzwerk.
-
 ---
 
-# 10. Verbindung testen
+# 10. Test Connectivity
 
-Auf PC0:
+On PC0:
 
 ```text
 Desktop
 → Command Prompt
 ```
 
-Anschließend:
+Run:
 
 ```text
 ping 192.168.1.1
 ```
 
-Erwartetes Ergebnis:
+Expected result:
 
 ```text
 Sent = 4
@@ -258,103 +243,89 @@ Received = 4
 Lost = 0
 ```
 
-Damit ist bestätigt, dass PC0 den Router erreichen kann.
+This confirms that PC0 can reach the router.
 
 ---
 
-# 11. Enable Secret konfigurieren
+# 11. Configure an Enable Secret
 
-Der Zugang zum Privileged EXEC Mode wird mit einem Passwort geschützt.
-
-Zurück in den Global Configuration Mode:
+Enter global configuration mode:
 
 ```text
 configure terminal
 ```
 
-Dann:
+Configure:
 
 ```text
 enable secret Admin123
 ```
 
-`enable secret` schützt den Wechsel von:
+This protects access from:
 
 ```text
 R1>
 ```
 
-zu:
+to:
 
 ```text
 R1#
 ```
 
-Die hier verwendeten Passwörter dienen nur diesem Packet-Tracer-Lab.
+The password used here is only for this Packet Tracer lab.
 
 ---
 
-# 12. Passwort-Verschlüsselung aktivieren
+# 12. Enable Password Encryption
 
 ```text
 service password-encryption
 ```
 
-Dieser Befehl sorgt dafür, dass viele Passwörter nicht mehr direkt als Klartext in der Konfiguration angezeigt werden.
+This prevents many simple passwords from appearing directly in clear text inside the configuration.
 
-Wichtig:
-
-`service password-encryption` ist keine starke kryptographische Sicherheitslösung.
-
-Der Befehl verhindert hauptsächlich, dass einfache Passwörter direkt lesbar in der Konfiguration stehen.
+It is mainly an obfuscation mechanism and should not be treated as strong encryption.
 
 ---
 
-# 13. MOTD Banner konfigurieren
+# 13. Configure an MOTD Banner
 
 ```text
 banner motd #Authorized access only#
 ```
 
-MOTD bedeutet:
+MOTD stands for:
 
 ```text
 Message Of The Day
 ```
 
-Das Banner wird Benutzern beim Zugriff auf das Gerät angezeigt.
-
-Die Zeichen `#` markieren hier den Anfang und das Ende des Textes.
+The `#` characters are used as delimiters around the message.
 
 ---
 
-# 14. Console-Zugang konfigurieren
+# 14. Configure Console Access
 
-Die lokale Console-Leitung wird ausgewählt:
+Select the console line:
 
 ```text
 line console 0
 ```
 
-Danach befindet man sich im Line Configuration Mode:
-
-```text
-R1(config-line)#
-```
-
-Console-Passwort setzen:
+Set the password:
 
 ```text
 password Console123
 ```
 
-Anschließend:
+Enable password checking:
 
 ```text
 login
 ```
 
-Die vollständige Konfiguration lautet damit:
+Complete console configuration:
 
 ```text
 line console 0
@@ -362,15 +333,7 @@ password Console123
 login
 ```
 
-Der Befehl:
-
-```text
-login
-```
-
-sorgt dafür, dass das konfigurierte Passwort beim Console-Zugriff tatsächlich abgefragt wird.
-
-Danach:
+Return to Privileged EXEC mode:
 
 ```text
 end
@@ -378,254 +341,208 @@ end
 
 ---
 
-# 15. Lokalen Benutzer erstellen
+# 15. Create a Local User
 
-Für die spätere SSH-Anmeldung wird ein lokaler Benutzer benötigt.
-
-Global Configuration Mode öffnen:
+Enter global configuration mode:
 
 ```text
 configure terminal
 ```
 
-Benutzer erstellen:
+Create the user:
 
 ```text
 username Admin secret Bili123
 ```
 
-Damit existiert jetzt ein lokales Benutzerkonto:
+This creates the local account used later for SSH authentication.
+
+Lab credentials:
 
 ```text
 Username: Admin
 Password: Bili123
 ```
 
-Auch diese Zugangsdaten werden ausschließlich für dieses Lab verwendet.
-
 ---
 
-# 16. Domain Name konfigurieren
+# 16. Configure the Domain Name
 
-Für die Erzeugung der RSA-Schlüssel benötigt der Router einen Hostnamen und einen Domain Name.
+SSH key generation requires a hostname and domain name.
 
-Der Hostname `R1` wurde bereits gesetzt.
+The hostname is already:
 
-Jetzt:
+```text
+R1
+```
+
+Configure the domain:
 
 ```text
 ip domain-name lab.local
 ```
 
-Der vollständige Gerätename kann dadurch beispielsweise als:
-
-```text
-R1.lab.local
-```
-
-betrachtet werden.
-
 ---
 
-# 17. RSA-Schlüssel erzeugen
+# 17. Generate RSA Keys
 
-SSH benötigt kryptographische Schlüssel.
+Generate the RSA key pair:
 
 ```text
 crypto key generate rsa
 ```
 
-Cisco IOS fragt anschließend nach der Größe des RSA-Schlüssels:
+Cisco IOS asks for the modulus size:
 
 ```text
 How many bits in the modulus [512]:
 ```
 
-Für dieses Packet-Tracer-Lab wurde verwendet:
+For this Packet Tracer lab:
 
 ```text
 1024
 ```
 
-Danach erzeugt der Router das RSA-Schlüsselpaar.
+was used.
 
 ---
 
-# 18. SSH Version 2 aktivieren
+# 18. Enable SSH Version 2
 
 ```text
 ip ssh version 2
 ```
 
-SSH bedeutet:
+SSH stands for:
 
 ```text
 Secure Shell
 ```
 
-SSH ermöglicht einen verschlüsselten Remote-Zugriff auf die Kommandozeile eines Netzwerkgerätes.
+SSH provides encrypted remote command-line access.
 
-SSH sollte gegenüber Telnet bevorzugt werden, da Telnet Daten einschließlich Zugangsdaten unverschlüsselt übertragen kann.
+It is preferred over Telnet because Telnet transmits data in clear text.
 
 ---
 
-# 19. VTY-Leitungen konfigurieren
+# 19. Configure the VTY Lines
 
-VTY steht für:
+VTY stands for:
 
 ```text
 Virtual Teletype
 ```
 
-VTY-Leitungen werden für Remote-Zugriffe wie SSH verwendet.
+VTY lines are used for remote CLI sessions.
 
-Die ersten fünf VTY-Leitungen werden ausgewählt:
+Select the first five VTY lines:
 
 ```text
 line vty 0 4
 ```
 
-Danach:
+Use the local user database:
 
 ```text
 login local
 ```
 
-Dieser Befehl sorgt dafür, dass die lokale Benutzer-Datenbank verwendet wird.
-
-In diesem Lab ist das:
-
-```text
-username Admin secret Bili123
-```
-
-Anschließend wird nur SSH erlaubt:
+Allow SSH only:
 
 ```text
 transport input ssh
 ```
 
-Die komplette VTY-Konfiguration lautet:
+Complete VTY configuration:
 
 ```text
 line vty 0 4
 login local
 transport input ssh
 ```
-
-Damit wird Telnet für diese VTY-Leitungen nicht zugelassen.
 
 ---
 
-# 20. SSH vom PC testen
+# 20. Test SSH from PC0
 
-Zuerst wird erneut überprüft, ob PC0 den Router erreichen kann:
+First verify connectivity again:
 
 ```text
 ping 192.168.1.1
 ```
 
-Anschließend wird die SSH-Verbindung gestartet:
+Then start the SSH session:
 
 ```text
 ssh -l Admin 192.168.1.1
 ```
 
-Dabei bedeutet:
+Enter the local user password when prompted.
 
-```text
-ssh
-```
-
-SSH-Verbindung starten.
-
-```text
--l Admin
-```
-
-Login-Benutzer `Admin` verwenden.
-
-```text
-192.168.1.1
-```
-
-Zieladresse des Routers.
-
-Danach wird das Passwort des lokalen Benutzers eingegeben.
-
-Nach erfolgreicher Anmeldung erscheint:
+After successful login, the router displays the banner:
 
 ```text
 Authorized access only
 ```
 
-und anschließend:
+and the prompt:
 
 ```text
 R1>
 ```
 
-Damit wird R1 jetzt remote von PC0 über SSH administriert.
+This confirms that PC0 is remotely connected to R1 using SSH.
 
 ---
 
-# 21. Privileged EXEC Mode über SSH
+# 21. Enter Privileged EXEC Mode over SSH
 
-Auch bei einer SSH-Verbindung landet der Benutzer zunächst im User EXEC Mode:
-
-```text
-R1>
-```
-
-Mit:
+From the SSH session:
 
 ```text
 enable
 ```
 
-wird versucht, in den Privileged EXEC Mode zu wechseln.
+Enter the enable secret.
 
-Danach wird das zuvor konfigurierte Enable Secret abgefragt.
-
-Nach erfolgreicher Anmeldung:
+After successful authentication:
 
 ```text
 R1#
 ```
 
-Damit ist auch die administrative Verwaltung des Routers über SSH möglich.
+The router can now be fully administered remotely.
 
 ---
 
-# 22. Aktive Benutzer anzeigen
+# 22. Verify Logged-In Users
 
-Mit:
+Run:
 
 ```text
 show users
 ```
 
-werden aktuell angemeldete Benutzer angezeigt.
+The active SSH session appears on a VTY line.
 
-Im Lab war dabei unter anderem der Benutzer:
+In this lab, the user was:
 
 ```text
 Admin
 ```
 
-auf einer VTY-Leitung sichtbar.
-
-Das bestätigt, dass die Verbindung tatsächlich über einen Remote-VTY-Zugang aufgebaut wurde.
-
 ---
 
-# 23. SSH-Status überprüfen
+# 23. Verify SSH Status
+
+Run:
 
 ```text
 show ip ssh
 ```
 
-Im Lab wurde unter anderem angezeigt:
+The router showed:
 
 ```text
 SSH Enabled - version 2.0
@@ -633,19 +550,19 @@ Authentication timeout: 120 secs
 Authentication retries: 3
 ```
 
-Damit wird bestätigt, dass SSH aktiviert ist und Version 2 verwendet wird.
+This confirms that SSH version 2 is active.
 
 ---
 
-# 24. Running Configuration überprüfen
+# 24. Verify the Running Configuration
+
+Run:
 
 ```text
 show running-config
 ```
 
-Damit wird die aktuell aktive Konfiguration im RAM angezeigt.
-
-Wichtige Einträge dieses Labs sind beispielsweise:
+Important configuration sections include:
 
 ```text
 hostname R1
@@ -664,7 +581,7 @@ ip ssh version 2
 ip domain-name lab.local
 ```
 
-Router-Interface:
+Router interface:
 
 ```text
 interface GigabitEthernet0/0
@@ -672,7 +589,7 @@ interface GigabitEthernet0/0
  ip address 192.168.1.1 255.255.255.0
 ```
 
-Console-Konfiguration:
+Console configuration:
 
 ```text
 line console 0
@@ -680,7 +597,7 @@ line console 0
  login
 ```
 
-VTY-Konfiguration:
+VTY configuration:
 
 ```text
 line vty 0 4
@@ -690,29 +607,27 @@ line vty 0 4
 
 ---
 
-# 25. Running-Config und Startup-Config
-
-Cisco-Geräte unterscheiden zwischen der aktuell verwendeten und der dauerhaft gespeicherten Konfiguration.
+# 25. Running-Config vs Startup-Config
 
 ## Running-Config
 
-Die aktuell aktive Konfiguration befindet sich im RAM.
+The running configuration is the configuration currently active in RAM.
 
-Anzeige:
+Display it with:
 
 ```text
 show running-config
 ```
 
-Änderungen an der Running-Config wirken sofort.
+Changes take effect immediately.
 
-Nach einem Neustart würden diese Änderungen jedoch verloren gehen, wenn sie nicht gespeichert wurden.
+However, they are lost after a restart unless they are saved.
 
 ## Startup-Config
 
-Die Startup-Config enthält die Konfiguration, die beim Start des Gerätes geladen wird.
+The startup configuration is stored and loaded during device boot.
 
-Anzeige:
+Display it with:
 
 ```text
 show startup-config
@@ -720,36 +635,34 @@ show startup-config
 
 ---
 
-# 26. Konfiguration speichern
+# 26. Save the Configuration
 
-Die aktuelle Running-Config wird in die Startup-Config kopiert:
+Save the running configuration:
 
 ```text
 copy running-config startup-config
 ```
 
-Cisco IOS fragt:
+Cisco IOS asks:
 
 ```text
 Destination filename [startup-config]?
 ```
 
-Hier kann einfach Enter gedrückt werden.
+Press Enter.
 
-Erwartete Ausgabe:
+Expected output:
 
 ```text
 Building configuration...
 [OK]
 ```
 
-Damit ist die Konfiguration dauerhaft gespeichert.
+The configuration is now stored permanently.
 
 ---
 
-# 27. Wichtige IOS-Modi
-
-Während des Labs wurden mehrere Cisco-IOS-Modi verwendet.
+# 27. Important Cisco IOS Modes
 
 ## User EXEC Mode
 
@@ -757,9 +670,7 @@ Während des Labs wurden mehrere Cisco-IOS-Modi verwendet.
 R1>
 ```
 
-Eingeschränkter Zugriff.
-
----
+Basic access with limited commands.
 
 ## Privileged EXEC Mode
 
@@ -767,15 +678,13 @@ Eingeschränkter Zugriff.
 R1#
 ```
 
-Erweiterte administrative Befehle.
+Administrative access.
 
-Wechsel mit:
+Enter with:
 
 ```text
 enable
 ```
-
----
 
 ## Global Configuration Mode
 
@@ -783,15 +692,11 @@ enable
 R1(config)#
 ```
 
-Öffnen mit:
+Enter with:
 
 ```text
 configure terminal
 ```
-
-Hier werden globale Geräteeinstellungen verändert.
-
----
 
 ## Interface Configuration Mode
 
@@ -799,15 +704,11 @@ Hier werden globale Geräteeinstellungen verändert.
 R1(config-if)#
 ```
 
-Beispiel:
+Example:
 
 ```text
 interface gigabitEthernet 0/0
 ```
-
-Hier werden Einstellungen eines Interfaces verändert.
-
----
 
 ## Line Configuration Mode
 
@@ -815,13 +716,13 @@ Hier werden Einstellungen eines Interfaces verändert.
 R1(config-line)#
 ```
 
-Beispielsweise für:
+Used for console and VTY configuration.
+
+Examples:
 
 ```text
 line console 0
 ```
-
-oder:
 
 ```text
 line vty 0 4
@@ -829,98 +730,76 @@ line vty 0 4
 
 ---
 
-# 28. Navigation zwischen den IOS-Modi
+# 28. IOS Navigation
 
-Eine Ebene zurück:
+Go back one configuration level:
 
 ```text
 exit
 ```
 
-Direkt zurück zum Privileged EXEC Mode:
+Return directly to Privileged EXEC mode:
 
 ```text
 end
-```
-
-Beispiel:
-
-```text
-R1(config-line)#
-```
-
-mit:
-
-```text
-end
-```
-
-wird direkt zu:
-
-```text
-R1#
 ```
 
 ---
 
-# 29. Zentrale Befehle des Labs
+# 29. Important Commands
 
-| Befehl | Funktion |
+| Command | Purpose |
 |---|---|
-| `enable` | Wechsel in den Privileged EXEC Mode |
-| `configure terminal` | Global Configuration Mode öffnen |
-| `hostname R1` | Gerätenamen setzen |
-| `interface gigabitEthernet 0/0` | Interface konfigurieren |
-| `ip address ...` | IPv4-Adresse konfigurieren |
-| `no shutdown` | Interface aktivieren |
-| `description ...` | Interface beschreiben |
-| `enable secret ...` | Privileged EXEC Mode schützen |
-| `service password-encryption` | einfache Passwörter in der Config verschleiern |
-| `banner motd ...` | MOTD-Banner konfigurieren |
-| `line console 0` | Console-Leitung konfigurieren |
-| `password ...` | Line-Passwort setzen |
-| `login` | Passwortabfrage auf einer Line aktivieren |
-| `username ... secret ...` | lokalen Benutzer erstellen |
-| `ip domain-name ...` | Domain Name konfigurieren |
-| `crypto key generate rsa` | RSA-Schlüssel erzeugen |
-| `ip ssh version 2` | SSH Version 2 aktivieren |
-| `line vty 0 4` | Remote-Zugangsleitungen konfigurieren |
-| `login local` | lokale Benutzer-Datenbank verwenden |
-| `transport input ssh` | nur SSH als Remote-Protokoll erlauben |
-| `show users` | aktive Benutzer anzeigen |
-| `show ip ssh` | SSH-Status anzeigen |
-| `show ip interface brief` | Interface-Übersicht anzeigen |
-| `show running-config` | aktive Konfiguration anzeigen |
-| `show startup-config` | gespeicherte Startkonfiguration anzeigen |
-| `copy running-config startup-config` | Konfiguration dauerhaft speichern |
+| `enable` | Enter Privileged EXEC mode |
+| `configure terminal` | Enter Global Configuration mode |
+| `hostname R1` | Configure the device hostname |
+| `interface gigabitEthernet 0/0` | Enter interface configuration mode |
+| `ip address ...` | Configure an IPv4 address |
+| `no shutdown` | Enable an interface |
+| `description ...` | Add an interface description |
+| `enable secret ...` | Protect Privileged EXEC access |
+| `service password-encryption` | Obfuscate simple passwords in the config |
+| `banner motd ...` | Configure a login banner |
+| `line console 0` | Configure the console line |
+| `password ...` | Configure a line password |
+| `login` | Enable line password checking |
+| `username ... secret ...` | Create a local user |
+| `ip domain-name ...` | Configure the domain name |
+| `crypto key generate rsa` | Generate RSA keys |
+| `ip ssh version 2` | Enable SSH version 2 |
+| `line vty 0 4` | Configure remote access lines |
+| `login local` | Use local users for authentication |
+| `transport input ssh` | Allow SSH only |
+| `show users` | Display logged-in users |
+| `show ip ssh` | Display SSH status |
+| `show ip interface brief` | Display interface summary |
+| `show running-config` | Display active configuration |
+| `show startup-config` | Display saved configuration |
+| `copy running-config startup-config` | Save the configuration |
 
 ---
 
-# 30. Ergebnis
+# 30. Result
 
-Das Lab wurde erfolgreich abgeschlossen.
+The lab was completed successfully.
 
-PC0 kann R1 über das lokale Netzwerk erreichen und sich anschließend verschlüsselt per SSH am Router anmelden.
+PC0 can reach R1 over the local network and remotely manage the router using SSH.
 
-Dabei wurden sowohl lokaler Console-Zugriff als auch Remote-Zugriff abgesichert.
-
-Die endgültige Verbindung sieht so aus:
+Final topology:
 
 ```text
 PC0
 192.168.1.10
      |
-     | Ethernet
      |
 Switch0
      |
-     | Ethernet
      |
 R1 G0/0
 192.168.1.1
 ```
 
-Remote-Administration:
+Remote management path:
 
 ```text
 PC0
@@ -930,4 +809,4 @@ PC0
 R1
 ```
 
-Damit wurden grundlegende Cisco-IOS-Konfiguration, Zugriffssteuerung und Remote-Administration praktisch umgesetzt.
+This lab demonstrates basic Cisco IOS configuration, access protection, SSH configuration, remote administration, verification, and configuration persistence.
